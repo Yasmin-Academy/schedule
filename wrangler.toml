@@ -16,13 +16,14 @@ id = "363b2f6bdc544ed4884b5dbe7ce095c5"
 directory = ".svelte-kit/cloudflare"
 binding = "ASSETS"
 
-OWNER_EMAIL=consultation@yasmin.academy
-OWNER_NAME=Yasmin Academy
-OWNER_SLUG=yasmin-academy
-WIDGET_ALLOWED_ORIGINS=https://yasmin.academy,https://ya-staging.wstd.io
+[vars]
+OWNER_EMAIL = "consultation@yasmin.academy"
+OWNER_NAME = "Yasmin Academy"
+OWNER_SLUG = "yasmin-academy"
+WIDGET_ALLOWED_ORIGINS = "https://yasmin.academy,https://ya-staging.wstd.io"
 
-MAILGUN_DOMAIN=go.yasmin.academy
-MAILGUN_FROM=Consultation <consultation@go.yasmin.academy>
-MAILGUN_REPLY_TO=consultation@yasmin.academy
+MAILGUN_DOMAIN = "go.yasmin.academy"
+MAILGUN_FROM = "Consultation <consultation@go.yasmin.academy>"
+MAILGUN_REPLY_TO = "consultation@yasmin.academy"
 
-ADMIN_EMAIL=consultation@yasmin.academy
+ADMIN_EMAIL = "consultation@yasmin.academy"
