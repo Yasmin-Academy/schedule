@@ -36,11 +36,6 @@ declare global {
 				// Legacy / to be removed later (keeping optional to avoid breaking deploys during refactor)
 				ADMIN_EMAIL?: string;
 				EMAIL_FROM?: string;
-			// Removed (Mailgun only)
-			EMAILIT_API_KEY?: string;
-				GOOGLE_CLIENT_ID?: string;
-				GOOGLE_CLIENT_SECRET?: string;
-			};
 			context: {
 				waitUntil(promise: Promise<any>): void;
 			};

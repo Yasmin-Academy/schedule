@@ -1,15 +1,3 @@
-<!--
-  Native embed widget (no iframe).
-
-  This file is compiled as a regular Svelte component and is mounted into a host page
-  by the CDN script (src/widget/entry.ts).
-
-  Embed example:
-    <script src="https://YOUR_DOMAIN/widget/schedule-widget.js" defer></script>
-    <div data-schedule data-event="YOUR_EVENT_SLUG" data-base-url="https://YOUR_DOMAIN" data-lang="ar"></div>
--->
-
-
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { createBrandColors } from '$lib/utils/colorUtils';
@@ -312,7 +300,7 @@
 	{:else if errorMsg}
 		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
 	{:else}
-			<div class="min-h-[520px] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+			<div class="min-h-[520px] widget rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 			<div class="flex flex-col md:flex-row">
 					<EventSidebar
 						user={{ name: host?.name }}

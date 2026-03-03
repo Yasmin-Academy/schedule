@@ -8,24 +8,6 @@ import CloudMeetWidget from './CloudMeetWidget.svelte';
 // @ts-ignore
 import widgetCss from '../app.css?inline';
 
-/**
- * CDN embed entry (no iframe).
- *
- * Best-practice embed is a plain DIV mount point with data-attributes:
- *
- *   <div
- *     data-schedule
- *     data-event="YOUR_EVENT_SLUG"
- *     data-base-url="https://book.yourdomain.com"
- *     data-lang="en"
- *   ></div>
- *   <script src="https://book.yourdomain.com/widget/schedule-widget.js" defer></script>
- *
- * Notes for SPA builders (Webstudio, etc.):
- * - This script is SAFE to include on multiple pages.
- * - It uses a MutationObserver so it can mount when your page navigates client-side.
- */
-
 type Mounted = { target: Element; unmount: () => void };
 
 const SELECTOR = '[data-schedule]';

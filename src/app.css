@@ -10,7 +10,6 @@
 }
 
 @layer utilities {
-	/* Flip directional icons in RTL (e.g., chevrons/arrows) */
 	[dir="rtl"] .rtl-flip {
 		transform: scaleX(-1);
 	}
@@ -45,5 +44,10 @@
 
 	.scrollbar-thin::-webkit-scrollbar-thumb:hover {
 		background-color: #9ca3af;
+	}
+		
+	/*Site Widget Only*/
+	.widget {
+		background-color: var(--background-card);
 	}
 }

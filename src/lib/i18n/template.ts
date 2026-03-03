@@ -69,8 +69,6 @@ export const AR_TRANSLATIONS: Record<keyof typeof EN_TRANSLATIONS, string> = {
 
   meetingLabel: 'اجتماع',
   hostLabel: 'المضيف',
-  googleMeet: 'Google Meet',
-  msTeams: 'Microsoft Teams',
 
   onlineRoom: 'غرفة أونلاين',
   roomNote: 'سيتم إرسال رابط الغرفة والتفاصيل عبر البريد الإلكتروني بعد الحجز.',

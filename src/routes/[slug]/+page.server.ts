@@ -1,7 +1,6 @@
 /**
  * Booking page for specific event type (single-user)
  * Uses server-side load to avoid SSR internal fetch issues on Cloudflare Pages
- * See: https://github.com/dennisklappe/CloudMeet/issues/11
  */
 
 import { error } from '@sveltejs/kit';
