@@ -22,7 +22,7 @@ import { join } from 'node:path';
 
 const args = new Set(process.argv.slice(2));
 const isRemote = args.has('--remote');
-const dbName = 'cloudmeet';
+const dbName = 'scheduler-db';
 
 function runWranglerExecute({ file, command }) {
   const base = ['wrangler', 'd1', 'execute', dbName];

@@ -1,13 +1,17 @@
-name = "cloudmeet"
+name = "schedule"
+main = ".svelte-kit/cloudflare/worker.js"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
-pages_build_output_dir = ".svelte-kit/cloudflare"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "cloudmeet"
-database_id = "YOUR_DATABASE_ID"
+database_name = "scheduler-db"
+database_id = "0879917f-0ff0-45e4-9671-4312c4dd0f8f"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "363b2f6bdc544ed4884b5dbe7ce095c5"
+
+[assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"

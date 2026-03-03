@@ -23,3 +23,7 @@ dev.vars
 # macOS junk
 ._*
 .DS_Store
+
+# macOS metadata
+._*
+.DS_Store

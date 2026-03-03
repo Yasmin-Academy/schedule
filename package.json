@@ -5,25 +5,17 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "npm run db:init && npm run build && wrangler pages dev .svelte-kit/cloudflare",
-    "dev:watch": "vite dev",
+    "dev": "npm run db:init && npm run build && wrangler dev --local",
+    "dev:watch": "svelte-kit dev",
     "build": "npm run build:widget && vite build",
     "preview": "vite preview",
     "db:init": "node scripts/db-init.mjs --local",
     "db:init:remote": "node scripts/db-init.mjs --remote",
-    "deploy": "npm run build && wrangler pages deploy .svelte-kit/cloudflare",
+    "deploy": "npm run build && wrangler deploy",
     "prebuild": "node scripts/prebuild.js",
     "build:widget": "svelte-kit sync && vite build --config vite.widget.config.ts",
     "postinstall": "svelte-kit sync"
   },
-  "keywords": [
-    "calendly",
-    "meeting-scheduler",
-    "cloudflare",
-    "svelte",
-    "sveltekit",
-    "google-calendar"
-  ],
   "author": "Yasmin Academy",
   "license": "UNLICENSED",
   "devDependencies": {
