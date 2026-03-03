@@ -104,19 +104,13 @@
 					href="/login"
 					class="inline-flex items-center px-8 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition"
 				>
-					Login with Google
+					Login
 				</a>
 				<a
 					href="/dashboard"
 					class="inline-flex items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition"
 				>
 					Go to Dashboard
-				</a>
-				<a
-					href="/dashboard/translations"
-					class="inline-flex items-center px-8 py-3 border border-gray-300 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition"
-				>
-					Translations
 				</a>
 			</div>
 		</div>

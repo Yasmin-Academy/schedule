@@ -377,7 +377,7 @@
 							{/if}
 						</div>
 
-						<!-- Timezone control (match main booking page feel + close on outside click) -->
+						<!-- Timezone control -->
 					<div class="mt-4 flex items-center justify-center text-sm text-gray-600">
 						<div class="flex items-center gap-2">
 								<!-- globe icon -->
@@ -444,26 +444,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-  /*
-    The widget must look identical regardless of the host page's CSS.
-    We therefore reset the *local* typography + box sizing under the mount root.
-  */
-  :global(.schedule-widget-root) {
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
-      "Apple Color Emoji", "Segoe UI Emoji";
-    font-size: 16px;
-    line-height: 1.4;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-  }
-
-  :global(.schedule-widget-root),
-  :global(.schedule-widget-root *),
-  :global(.schedule-widget-root *::before),
-  :global(.schedule-widget-root *::after) {
-    box-sizing: border-box;
-  }
-</style>
