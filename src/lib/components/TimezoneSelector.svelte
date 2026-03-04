@@ -87,7 +87,7 @@
 <!-- Backdrop -->
 	<button
 	type="button"
-	class="fixed inset-0 bg-black/20 z-40"
+	class="dialog-overlay fixed inset-0 z-40"
 	onclick={onClose}
 		aria-label={ui.close}
 ></button>

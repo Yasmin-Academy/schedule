@@ -34,7 +34,7 @@
 </script>
 
 <div class="w-52 ml-6 border-l border pl-6 flex flex-col" style="max-height: 400px;">
-	<h3 class="text-sm font-medium text-gray-500 mb-4 flex-shrink-0">
+	<h3 class="text-sm font-medium text-primary mb-4 flex-shrink-0">
 		{formatSelectedDate(selectedDate).split(',')[0]}
 	</h3>
 
@@ -51,14 +51,14 @@
 			{#each availableSlots as slot}
 				{#if selectedSlot === slot}
 					<div class="flex gap-2">
-						<button type="button" class="flex-1 py-2.5 px-3 border-2 border-gray-900 bg-gray-900 text-white rounded-lg text-sm font-semibold">
+						<button type="button" class="flex-1 py-2.5 px-3 border-2 border background-accent text-primary rounded-lg text-sm font-semibold">
 							{formatTime(slot.start)}
 						</button>
 						<button
 							type="button"
 							onclick={onConfirm}
 							class="flex-1 py-2.5 px-3 text-white rounded-lg text-sm font-semibold transition"
-							style="background-color: {brandColor}"
+							style="background-color: var(--foreground-accent, {brandColor})"
 						>
 							{tr.next ?? (lang === 'ar' ? 'التالي' : 'Next')}
 						</button>

@@ -333,7 +333,7 @@
 					{formatSelectedDate}
 				/>
 			{:else}
-				<div class="w-full md:flex widget rounded-2xl shadow-lg overflow-hidden" style="max-width: 920px;">
+				<div class="w-full md:flex widget rounded-2xl overflow-hidden" style="max-width: 920px;">
 					<EventSidebar
 						user={{ name: host?.name }}
 						{eventType}

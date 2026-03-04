@@ -27,7 +27,7 @@
 </script>
 
 <div class="max-w-md">
-	<h2 class="text-xl font-semibold text-gray-900 mb-6">
+	<h2 class="text-xl font-semibold text-primary mb-6">
 		{tr.yourInfo ?? (lang === 'ar' ? 'معلوماتك' : 'Enter Details')}
 	</h2>
 
@@ -39,7 +39,7 @@
 
 	<form onsubmit={onSubmit} class="space-y-5">
 		<div>
-			<label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+			<label for="name" class="block text-sm font-medium text-primary mb-2">
 				{tr.nameLabel ?? (lang === 'ar' ? 'الاسم الكامل' : 'Name')} *
 			</label>
 			<input
@@ -52,7 +52,7 @@
 			/>
 		</div>
 		<div>
-			<label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+			<label for="email" class="block text-sm font-medium text-primary mb-2">
 				{tr.emailLabel ?? (lang === 'ar' ? 'البريد الإلكتروني' : 'Email')} *
 			</label>
 			<input
@@ -65,7 +65,7 @@
 			/>
 		</div>
 		<div>
-			<label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+			<label for="notes" class="block text-sm font-medium text-primary mb-2">
 				{tr.notesLabel ?? (lang === 'ar'
 					? 'ملاحظات (اختياري)'
 					: 'Please share anything that will help prepare for our meeting.')}
@@ -82,7 +82,7 @@
 			type="submit"
 			disabled={bookingStatus === 'submitting'}
 			class="w-full text-white py-3 px-6 rounded-full font-semibold transition disabled:opacity-50"
-			style="background-color: {brandColor}"
+			style="background-color: var(--background-accent, {brandColor})"
 			onmouseenter={(e) => e.currentTarget.style.backgroundColor = brandDark}
 			onmouseleave={(e) => e.currentTarget.style.backgroundColor = brandColor}
 		>
