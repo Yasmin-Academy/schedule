@@ -6,100 +6,52 @@
 	import { formatSelectedDate } from '$lib/utils/dateFormatters';
 	import { BookingCalendar, TimeSlotList, BookingForm, BookingSuccess, EventSidebar } from '$lib/components/booking';
 
-	let { event = '', baseUrl = '', lang = 'en' } = $props();
+	let { event = '', baseUrl = '', lang = 'en' } = $props<{ event?: string; baseUrl?: string; lang?: string }>();
 
-	interface BookingType {
-		id: string;
-		name: string;
-		name_ar?: string;
-		duration: number;
-		description?: string;
-		description_ar?: string;
-	}
+	let l = $state<'en' | 'ar'>('en');
+	let dir = $state<'ltr' | 'rtl'>('ltr');
 
-	interface BookingSlot {
-		start: string;
-		end: string;
-	}
-
-	interface BookingHost {
-		name: string;
-		email?: string;
-		avatar?: string;
-		translations?: Record<string, Record<string, string>>;
-		widgetTranslations?: Record<string, string>;
-	}
-
-	interface BookingData {
-		eventType: BookingType;
-		host: BookingHost;
-		timeFormat?: '12h' | '24h';
-		brandColor?: string;
-	}
-
-	const defaults: Record<string, Record<string, string>> = {
+	let t = $state<Record<string, string>>({});
+	const defaults = {
 		en: {
-			next: 'Next',
-			noAvailableTimes: 'No available times',
-			selectDate: 'Select a date',
-			timeZone: 'Time zone',
-			room: 'Online room',
-			roomNote: 'The room link and details will be sent by email after booking.',
-			booked: 'Booked',
-			backToCalendar: 'Back to calendar',
-			addToCalendar: 'Add to calendar',
-			copyLink: 'Copy link',
-			linkCopied: 'Link copied',
-			meetingLink: 'Meeting link',
-			original: 'Original',
-			reschedule: 'Reschedule',
-			cancel: 'Cancel',
-			confirm: 'Confirm',
-			submitting: 'Submitting...',
-			error: 'Something went wrong',
-			success: 'Success',
-			loading: 'Loading...'
+			selectDateTime: 'Select a date & time',
+			onlineRoom: 'Online Room',
+			roomNote: 'Room link and details will be sent by email after booking.'
 		},
 		ar: {
-			next: 'التالي',
-			noAvailableTimes: 'لا توجد أوقات متاحة',
-			selectDate: 'اختر تاريخاً',
-			timeZone: 'المنطقة الزمنية',
-			room: 'غرفة أونلاين',
-			roomNote: 'سيتم إرسال رابط الغرفة والتفاصيل عبر البريد الإلكتروني بعد الحجز.',
-			booked: 'تم الحجز',
-			backToCalendar: 'العودة للتقويم',
-			addToCalendar: 'إضافة إلى التقويم',
-			copyLink: 'نسخ الرابط',
-			linkCopied: 'تم نسخ الرابط',
-			meetingLink: 'رابط الاجتماع',
-			original: 'الأصلي',
-			reschedule: 'إعادة الجدولة',
-			cancel: 'إلغاء',
-			confirm: 'تأكيد',
-			submitting: 'جارٍ الإرسال...',
-			error: 'حدث خطأ ما',
-			success: 'تم بنجاح',
-			loading: 'جارٍ التحميل...'
+			selectDateTime: 'اختر التاريخ والوقت',
+			onlineRoom: 'غرفة أونلاين',
+			roomNote: 'سيتم إرسال رابط الغرفة والتفاصيل عبر البريد الإلكتروني بعد الحجز.'
 		}
-	};
+	} as const;
 
-	function normalizeLang(l: string) {
-		return (l || 'en').toLowerCase().startsWith('ar') ? 'ar' : 'en';
-	}
+	const tr = $derived({ ...defaults[l], ...t });
 
-	let l = $derived(normalizeLang(lang));
+	let loadingCore = $state(true);
+	let errorMsg = $state<string | null>(null);
 
-	let bookingData = $state<BookingData | null>(null);
-	let eventType = $state<BookingType | null>(null);
-	let host = $state<BookingHost | null>(null);
+	let host = $state<{ name: string; brandColor: string; timeFormat: '12h' | '24h' } | null>(null);
+	let eventType = $state<any>(null);
 
-	let loading = $state(true);
-	let error = $state('');
+	const brandColor = $derived(host?.brandColor || '#3b82f6');
+	const colors = $derived(createBrandColors(brandColor));
+	const use12Hour = $derived((host?.timeFormat || '12h') !== '24h');
 
 	let selectedDate = $state<string | null>(null);
-	let selectedSlot = $state<BookingSlot | null>(null);
-	let availableSlots = $state<BookingSlot[]>([]);
+	let selectedSlot = $state<{ start: string; end: string } | null>(null);
+	let availableSlots = $state<Array<{ start: string; end: string }>>([]);
+
+	let showForm = $state(false);
+	let bookingForm = $state({ name: '', email: '', notes: '' });
+
+	let bookingStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
+	let bookingError = $state('');
+
+	let meetingUrl = $state<string | null>(null);
+	let clientStartedAt = $state(Date.now());
+
+	let availableDates = $state<Set<string>>(new Set());
+	let loadingAvailability = $state(false);
 	let loadingSlots = $state(false);
 	let currentMonth = $state(new Date());
 
@@ -119,60 +71,68 @@
 			month: '2-digit',
 			day: '2-digit'
 		}).formatToParts(d);
-		const y = parts.find((p) => p.type === 'year')?.value || '1970';
-		const m = parts.find((p) => p.type === 'month')?.value || '01';
-		const day = parts.find((p) => p.type === 'day')?.value || '01';
-		return `${y}-${m}-${day}`;
+
+		const get = (type: string) => parts.find((p) => p.type === type)?.value || '';
+		return `${get('year')}-${get('month')}-${get('day')}`;
+	}
+
+	function tzDisplayName(tz: string) {
+		return getTimezoneLabel(tz, lang);
 	}
 
 	function updateTzNow() {
-		try {
-			const tz = selectedTimezone || detectTimezone();
-			const label = getTimezoneLabel(tz, l);
+		const now = new Date();
 
-			const locale = l === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US';
+		tzNowLabel = tzDisplayName(selectedTimezone);
 
-			const now = new Date();
-			const nowStr = new Intl.DateTimeFormat(locale, {
-				hour: 'numeric',
-				minute: '2-digit',
-				hour12: use12Hour,
-				timeZone: tz
-			}).format(now);
+		const locale = l === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US';
 
-			tzNowLabel = label;
-			tzNowTime = nowStr;
-		} catch {
-			// ignore
-		}
+		tzNowTime = new Intl.DateTimeFormat(locale, {
+			timeZone: selectedTimezone,
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: use12Hour
+		}).format(now);
 	}
 
-	let use12Hour = $derived(bookingData?.timeFormat !== '24h');
+	function closeTimezoneIfOutside(e: Event) {
+		if (!showTimezoneDropdown) return;
 
-	const brandColor = $derived(bookingData?.brandColor || '#B78E39');
-	const colors = $derived(createBrandColors(brandColor));
+		const path =
+			typeof (e as any).composedPath === 'function'
+				? ((e as any).composedPath() as EventTarget[])
+				: [];
 
-	let t = $derived(() => {
-		const hostTranslations = (host?.translations as any)?.[l] || {};
-		return {
-			...(defaults as any)[l],
-			...(hostTranslations || {}),
-			...(host?.widgetTranslations || {})
-		};
-	});
+		if (tzDropdownEl && path.includes(tzDropdownEl)) return;
+		if (tzButtonEl && path.includes(tzButtonEl)) return;
 
-	const tr = $derived({ ...defaults[l], ...t });
+		const target = (e as any).target as Node | null;
+		if (!target) return;
 
-	const locale = l === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US';
+		if (tzDropdownEl?.contains(target) || tzButtonEl?.contains(target)) return;
 
-	function tzDisplayName(tz: string) {
-		return getTimezoneLabel(tz, l);
+		showTimezoneDropdown = false;
+	}
+
+	function closeTimezoneOnEsc(e: KeyboardEvent) {
+		if (!showTimezoneDropdown) return;
+		if (e.key === 'Escape' || e.key === 'Esc') showTimezoneDropdown = false;
+	}
+
+	function api(path: string) {
+		const b = (baseUrl || '').replace(/\/$/, '');
+		return `${b}${path}`;
+	}
+
+	function normalizeLang(raw: string) {
+		const v = (raw || '').toLowerCase();
+		return v.startsWith('ar') ? 'ar' : 'en';
 	}
 
 	function formatTime(isoStr: string) {
 		const date = new Date(isoStr);
 
-		return new Intl.DateTimeFormat(locale, {
+		return new Intl.DateTimeFormat(l === 'ar' ? 'ar' : 'en-US', {
 			hour: 'numeric',
 			minute: '2-digit',
 			hour12: use12Hour,
@@ -184,245 +144,295 @@
 		return `${formatTime(start)} - ${formatTime(end)}`;
 	}
 
+	async function fetchCore() {
+		loadingCore = true;
+		errorMsg = null;
+
+		try {
+			l = normalizeLang(lang);
+			dir = l === 'ar' ? 'rtl' : 'ltr';
+
+			if (!event) throw new Error('Missing event slug');
+			if (!baseUrl) throw new Error('Missing base-url');
+
+			const res = await fetch(api(`/api/public/event-type/${encodeURIComponent(event)}`));
+			if (!res.ok) throw new Error('Failed to load event');
+
+			const data = await res.json();
+
+			host = data.host;
+			eventType = data.eventType;
+			meetingUrl = data.eventType?.location_details || null;
+
+			const hostTranslations =
+				(data.host?.translations && (data.host.translations as any)[lang]) || {};
+
+			t = {
+				...(defaults as any)[lang],
+				...(hostTranslations || {}),
+				...(data.host?.widgetTranslations || {})
+			};
+		} catch (e: any) {
+			errorMsg = e?.message || 'Failed to load';
+		} finally {
+			loadingCore = false;
+		}
+	}
+
+	async function fetchMonthAvailability() {
+		if (!event) return;
+
+		loadingAvailability = true;
+
+		try {
+			const year = currentMonth.getFullYear();
+			const monthNum = currentMonth.getMonth() + 1;
+			const monthStr = `${year}-${String(monthNum).padStart(2, '0')}`;
+
+			const res = await fetch(
+				api(`/api/availability/month?event=${encodeURIComponent(event)}&month=${monthStr}`)
+			);
+			if (!res.ok) throw new Error();
+
+			const result = await res.json();
+			availableDates = new Set(result.availableDates || []);
+
+			if (!selectedDate && availableDates.size > 0) {
+				const today = ymdInTz(new Date(), selectedTimezone);
+				const sorted = Array.from(availableDates).sort();
+				const first = sorted.find((d) => d >= today) || sorted[0];
+				await handleDateSelect(first);
+			}
+		} finally {
+			loadingAvailability = false;
+		}
+	}
+
 	function prevMonth() {
 		currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+		fetchMonthAvailability();
 	}
 
 	function nextMonth() {
 		currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+		fetchMonthAvailability();
 	}
 
-	async function fetchBookingData() {
-		loading = true;
-		error = '';
+	async function handleDateSelect(dateStr: string) {
+		selectedDate = dateStr;
+		selectedSlot = null;
+		showForm = false;
 
-		try {
-			const res = await fetch(`${baseUrl}/api/public/event/${event}?lang=${l}`);
-			if (!res.ok) throw new Error('Failed to fetch booking data');
-
-			const data = (await res.json()) as BookingData;
-			bookingData = data;
-			eventType = data.eventType;
-			host = data.host;
-		} catch (e: any) {
-			error = e?.message || 'Failed to load';
-		} finally {
-			loading = false;
-		}
-	}
-
-	async function fetchSlots(dateStr: string) {
 		loadingSlots = true;
 
 		try {
 			const res = await fetch(
-				`${baseUrl}/api/public/slots/${event}?date=${dateStr}&tz=${encodeURIComponent(
-					selectedTimezone
-				)}`
+				api(`/api/availability?event=${encodeURIComponent(event)}&date=${dateStr}`)
 			);
-			if (!res.ok) throw new Error('Failed to fetch slots');
+			if (!res.ok) throw new Error();
 
-			const data = (await res.json()) as { slots: BookingSlot[] };
-			availableSlots = data.slots || [];
-		} catch {
-			availableSlots = [];
+			const result = await res.json();
+			availableSlots = result.slots || [];
 		} finally {
 			loadingSlots = false;
 		}
 	}
 
-	function selectDate(dateStr: string) {
-		selectedDate = dateStr;
-		selectedSlot = null;
-		fetchSlots(dateStr);
+	async function handleTimezoneSelect(tz: string) {
+		selectedTimezone = tz;
+		updateTzNow();
+		showTimezoneDropdown = false;
+
+		await fetchMonthAvailability();
+		if (selectedDate) await handleDateSelect(selectedDate);
 	}
 
-	function selectSlot(slot: BookingSlot) {
+	function selectSlot(slot: { start: string; end: string }) {
 		selectedSlot = slot;
 	}
 
 	function confirmSlot() {
-		// noop - BookingForm step
+		showForm = true;
 	}
 
-	let bookingForm = $state({
-		name: '',
-		email: '',
-		notes: ''
-	});
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
+		if (!selectedSlot) return;
 
-	let bookingStatus = $state<'idle' | 'submitting' | 'success' | 'error'>('idle');
-	let bookingError = $state('');
-	let meetingUrl = $state<string | null>(null);
-
-	async function handleSubmit(payload: { name: string; email: string; notes?: string }) {
 		bookingStatus = 'submitting';
 		bookingError = '';
 
 		try {
-			const res = await fetch(`${baseUrl}/api/public/book/${event}`, {
+			const res = await fetch(api('/api/bookings'), {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					...payload,
-					date: selectedDate,
-					start: selectedSlot?.start,
-					end: selectedSlot?.end,
-					timeZone: selectedTimezone,
+					eventSlug: event,
+					startTime: selectedSlot.start,
+					endTime: selectedSlot.end,
+					attendeeName: bookingForm.name,
+					attendeeEmail: bookingForm.email,
+					notes: bookingForm.notes,
+					company_website: '',
+					client_started_at: clientStartedAt,
+					timezone: selectedTimezone,
 					lang: l
 				})
 			});
 
-			if (!res.ok) {
-				const err = await res.json().catch(() => ({}));
-				throw new Error(err?.message || 'Booking failed');
-			}
+			if (!res.ok) throw new Error();
 
-			const data = (await res.json()) as { meetingUrl?: string };
-			meetingUrl = data.meetingUrl || null;
 			bookingStatus = 'success';
-		} catch (e: any) {
-			bookingError = e?.message || 'Booking failed';
+		} catch (err: any) {
 			bookingStatus = 'error';
+			bookingError = err?.message || 'Booking failed';
 		}
 	}
 
-	function closeTimezoneDropdown(e: MouseEvent) {
-		const target = e.target as Node | null;
+	onMount(async () => {
+		clientStartedAt = Date.now();
 
-		if (showTimezoneDropdown) {
-			if (tzDropdownEl && tzDropdownEl.contains(target)) return;
-			if (tzButtonEl && tzButtonEl.contains(target)) return;
-			showTimezoneDropdown = false;
-		}
-	}
+		document.addEventListener('mousedown', closeTimezoneIfOutside, true);
+		document.addEventListener('touchstart', closeTimezoneIfOutside, true);
+		window.addEventListener('keydown', closeTimezoneOnEsc);
 
-	onMount(() => {
-		fetchBookingData();
+		await fetchCore();
+
 		updateTzNow();
-		const id = setInterval(updateTzNow, 30_000);
-		document.addEventListener('click', closeTimezoneDropdown);
+		const tick = setInterval(updateTzNow, 60000);
+
+		await fetchMonthAvailability();
 
 		return () => {
-			clearInterval(id);
-			document.removeEventListener('click', closeTimezoneDropdown);
+			clearInterval(tick);
+			document.removeEventListener('mousedown', closeTimezoneIfOutside, true);
+			document.removeEventListener('touchstart', closeTimezoneIfOutside, true);
+			window.removeEventListener('keydown', closeTimezoneOnEsc);
 		};
 	});
-
-	$effect(() => {
-	if (selectedDate) fetchSlots(selectedDate);
-    });
 </script>
 
-{#if loading}
-	<div class="w-full flex items-center justify-center py-16">
-		<div class="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent" style="border-color: {brandColor}; border-top-color: transparent"></div>
-	</div>
-{:else if error}
-	<div class="w-full text-center py-16 text-red-500">{error}</div>
-{:else if bookingStatus === 'success'}
-	<BookingSuccess
-		lang={l}
-		tr={tr}
-		eventName={l === 'ar' && eventType?.name_ar ? eventType.name_ar : eventType?.name}
-		{selectedDate}
-		selectedSlot={selectedSlot}
-		{meetingUrl}
-		{brandColor}
-		{formatTimeRange}
-		formatSelectedDate={(d) => formatSelectedDate(d, locale)}
-	/>
-{:else}
-	<div class="flex flex-col gap-6">
-		<div class="flex justify-between items-start gap-4">
-			<div class="flex items-center gap-3">
-				<div class="flex flex-col">
-					<h1 class="text-2xl font-bold text-primary">
-						{l === 'ar' && eventType?.name_ar ? eventType.name_ar : eventType?.name}
-					</h1>
-				</div>
-			</div>
-
-			<div class="relative">
-				<button
-					bind:this={tzButtonEl}
-					type="button"
-					class="flex items-center gap-2 px-3 py-2 border foreground-border rounded-lg text-sm font-semibold"
-					onclick={() => (showTimezoneDropdown = !showTimezoneDropdown)}
-				>
-					<span class="text-primary">{tr.timeZone}</span>
-					<span class="text-gray-500">{tzNowLabel}</span>
-					<span class="text-gray-500">{tzNowTime}</span>
-					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-						<path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-					</svg>
-				</button>
-
-				{#if showTimezoneDropdown}
-					<div bind:this={tzDropdownEl} class="absolute right-0 mt-2 z-50">
-						<TimezoneSelector bind:selectedTimezone onSelect={() => (showTimezoneDropdown = false)} getTimezoneLabel={tzDisplayName} lang={l} />
-					</div>
-				{/if}
-			</div>
-		</div>
-
-		<div class="flex gap-6">
-			<EventSidebar
-				lang={l}
-				tr={tr}
-				user={{ name: host?.name }}
-				{eventType}
-				{selectedDate}
-				{selectedSlot}
-				{brandColor}
-				{formatTime}
-				meetingLabel={tr.room}
-				meetingNote={tr.roomNote}
-			/>
-
-			<div class="flex-1 flex gap-6">
-				<div class="flex flex-col">
-					<BookingCalendar
-						lang={l}
-						tr={tr}
-						{currentMonth}
-						{brandColor}
-						onSelectDate={selectDate}
-						onPrevMonth={prevMonth}
-						onNextMonth={nextMonth}
-					/>
-				</div>
-
-				{#if selectedDate}
-					<TimeSlotList
-						lang={l}
-						tr={tr}
+<div class="schedule-widget-root w-full" dir={dir} lang={l}>
+	{#if loadingCore}
+		<div class="p-6 text-sm text-muted">Loading…</div>
+	{:else if errorMsg}
+		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
+	{:else}
+		<div
+			class="flex flex-col items-center md:justify-center"
+			style="--brand-color: var(--foreground-accent);"
+		>
+			{#if bookingStatus === 'success' && selectedDate && selectedSlot}
+				<BookingSuccess
+					eventName={eventType?.name}
+					{selectedDate}
+					{selectedSlot}
+					{meetingUrl}
+					{brandColor}
+					{formatTimeRange}
+					{formatSelectedDate}
+				/>
+			{:else}
+				<div class="w-full md:flex widget rounded-2xl overflow-hidden" style="max-width: 920px;">
+					<EventSidebar
+						user={{ name: host?.name }}
+						{eventType}
 						{selectedDate}
-						availableSlots={availableSlots}
 						{selectedSlot}
-						loading={loadingSlots}
 						{brandColor}
 						{formatTime}
-						onSelectSlot={selectSlot}
-						onConfirm={confirmSlot}
+						meetingLabel={tr.onlineRoom}
+						meetingNote={tr.roomNote}
 					/>
-				{/if}
-			</div>
-		</div>
 
-		{#if selectedSlot}
-			<div class="mt-2">
-				<BookingForm
-					lang={l}
-					tr={tr}
-					{bookingForm}
-					{bookingStatus}
-					{bookingError}
-					{brandColor}
-					brandDark={colors.dark}
-					onSubmit={handleSubmit}
-				/>
-			</div>
-		{/if}
-	</div>
-{/if}
+					<div class="flex-1 p-6">
+						{#if showForm}
+							<BookingForm
+								{bookingForm}
+								{bookingStatus}
+								{bookingError}
+								{brandColor}
+								onSubmit={handleSubmit}
+							/>
+						{:else}
+							<div class="flex">
+								<div class="w-80">
+									<h2 class="text-xl font-semibold mb-6">
+										{l === 'ar' ? 'اختر تاريخًا' : 'Select a date'}
+									</h2>
+
+									<BookingCalendar
+										{currentMonth}
+										{selectedDate}
+										{availableDates}
+										{brandColor}
+										brandLighter={colors.lighter}
+										brandDark={colors.dark}
+										lang={l}
+										onDateSelect={handleDateSelect}
+										onPrevMonth={prevMonth}
+										onNextMonth={nextMonth}
+									/>
+
+									<!-- Timezone selector (matches booking page placement) -->
+									<div class="mt-6 relative">
+										<p class="text-sm font-semibold text-primary mb-2">
+											{l === 'ar' ? 'المنطقة الزمنية' : 'Timezone'}
+										</p>
+
+										<button
+											bind:this={tzButtonEl}
+											type="button"
+											onclick={() => (showTimezoneDropdown = !showTimezoneDropdown)}
+											class="flex items-center gap-2 text-sm text-muted hover:text-primary transition"
+										>
+											<svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+												/>
+											</svg>
+
+											<span>{tzNowLabel} · {tzNowTime}</span>
+
+											<svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+											</svg>
+										</button>
+
+										{#if showTimezoneDropdown}
+											<div bind:this={tzDropdownEl}>
+												<TimezoneSelector
+													{selectedTimezone}
+													lang={l}
+													{brandColor}
+													onSelect={(tz) => handleTimezoneSelect(tz)}
+													onClose={() => (showTimezoneDropdown = false)}
+												/>
+											</div>
+										{/if}
+									</div>
+								</div>
+
+								{#if selectedDate}
+									<TimeSlotList
+										{selectedDate}
+										availableSlots={availableSlots}
+										{selectedSlot}
+										loading={loadingSlots}
+										{brandColor}
+										{formatTime}
+										onSelectSlot={selectSlot}
+										onConfirm={confirmSlot}
+									/>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+</div>
