@@ -32,7 +32,7 @@
 		onConfirm
 	}: Props = $props();
 
-	$: locale = lang === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US';
+	const locale = $derived(lang === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US');
 
 	function weekdayLabel(dateStr: string) {
 		const d = new Date(dateStr);

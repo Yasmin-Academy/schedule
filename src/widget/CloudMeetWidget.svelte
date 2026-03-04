@@ -309,9 +309,9 @@
 		};
 	});
 
-	$: if (selectedDate) {
-		fetchSlots(selectedDate);
-	}
+	$effect(() => {
+	if (selectedDate) fetchSlots(selectedDate);
+    });
 </script>
 
 {#if loading}
