@@ -120,7 +120,7 @@
 		</div>
 
 		{#if eventType?.description}
-			<div class="mt-6 pt-6 border-t border-gray-200">
+			<div class="mt-6 pt-6 border-t border">
 				<div class="text-sm text-gray-600 prose prose-sm max-w-none [&_p]:my-2 [&_ul]:my-2 [&_ol]:my-2 [&_li]:my-1">
 					{@html sanitizedDescription}
 				</div>
@@ -128,7 +128,7 @@
 		{/if}
 
 		{#if selectedDate && selectedSlot}
-			<div class="mt-6 pt-6 border-t border-gray-200">
+			<div class="mt-6 pt-6 border-t border">
 				<div class="flex items-center gap-3 text-sm">
 					<svg class="w-5 h-5 text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
