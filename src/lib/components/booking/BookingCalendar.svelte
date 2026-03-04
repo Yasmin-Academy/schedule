@@ -113,7 +113,7 @@
 		{/each}
 	</div>
 
-	<div class="grid grid-cols-7 gap-1 font-system-ui">
+	<div class="grid grid-cols-7 gap-1">
 		{#each calendarDays() as day}
 			{@const hasSlots = availableDates.has(day.dateStr)}
 			{@const isClickable = day.isAvailable && hasSlots}
