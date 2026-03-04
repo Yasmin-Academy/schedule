@@ -94,13 +94,13 @@
 	<div class="flex items-center justify-between mb-4">
 		<h3 class="text-lg font-medium text-primary">{formatMonthYear(currentMonth)}</h3>
 		<div class="flex gap-2">
-			<button onclick={onPrevMonth} class="p-2 hover:bg-gray-100 rounded-full transition" aria-label={prevMonthLabel()}>
-				<svg class="w-5 h-5 text-gray-600 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<button onclick={onPrevMonth} class="p-2 hover:background-secondary rounded-full transition" aria-label={prevMonthLabel()}>
+				<svg class="w-5 h-5 text-primary rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
 				</svg>
 			</button>
-			<button onclick={onNextMonth} class="p-2 hover:bg-gray-100 rounded-full transition" aria-label={nextMonthLabel()}>
-				<svg class="w-5 h-5 text-gray-600 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<button onclick={onNextMonth} class="p-2 hover:background-secondary rounded-full transition" aria-label={nextMonthLabel()}>
+				<svg class="w-5 h-5 text-primary rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
 				</svg>
 			</button>

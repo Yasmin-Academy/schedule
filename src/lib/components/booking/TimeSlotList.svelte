@@ -33,7 +33,7 @@
 	}: Props = $props();
 </script>
 
-<div class="w-52 ml-6 border-l border pl-6 flex flex-col" style="max-height: 400px;">
+<div class="w-52 ml-6 border-l foreground-border pl-6 flex flex-col" style="max-height: 400px;">
 	<h3 class="text-sm font-medium text-primary mb-4 flex-shrink-0">
 		{formatSelectedDate(selectedDate).split(',')[0]}
 	</h3>
@@ -51,7 +51,7 @@
 			{#each availableSlots as slot}
 				{#if selectedSlot === slot}
 					<div class="flex gap-2">
-						<button type="button" class="flex-1 py-2.5 px-3 border-2 border background-accent text-primary rounded-lg text-sm font-semibold">
+						<button type="button" class="flex-1 py-2.5 px-3 border-2 foreground-border background-accent text-primary rounded-lg text-sm font-semibold">
 							{formatTime(slot.start)}
 						</button>
 						<button

@@ -47,11 +47,14 @@
 	}
 		
 	/*Widget*/
+	[type=text], [type=search] {
+    	background-color: transparent;
+    }
 	.widget {
 		background-color: var(--background-card, rgb(234 237 242 / 0.8));
 		border: var(--border-size-1) solid var(--foreground-border, rgb(228 228 225));
 	}
-	.border {
+	.foreground-border {
 		border-color: var(--foreground-border, rgb(228 228 225));
 	}
 	.text-primary {
@@ -61,7 +64,7 @@
 		color: var(--foreground-muted, rgb(66 91 136));
 	}
 	.background-secondary {
-		background-color: var(--background-secondary);
+		background-color: var(--background-secondary, rgb(223 230 241));
 	}
 	.timezone-selector {
 		background-color: var(--background-card, rgb(234 237 242 / 0.8));
