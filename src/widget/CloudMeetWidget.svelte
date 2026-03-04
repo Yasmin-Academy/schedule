@@ -319,8 +319,8 @@
 		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
 	{:else}
 		<div
-			class="min-h-screen bg-white md:bg-gray-100 flex flex-col items-center md:justify-center md:p-4"
-			style="--brand-color: {brandColor};"
+			class="md:bg-gray-100 flex flex-col items-center md:justify-center md:p-4"
+			style="--brand-color: var(--foreground-accent);"
 		>
 			{#if bookingStatus === 'success' && selectedDate && selectedSlot}
 				<BookingSuccess
@@ -333,7 +333,7 @@
 					{formatSelectedDate}
 				/>
 			{:else}
-				<div class="w-full md:flex bg-white rounded-2xl shadow-lg overflow-hidden" style="max-width: 920px;">
+				<div class="w-full md:flex widget rounded-2xl shadow-lg overflow-hidden" style="max-width: 920px;">
 					<EventSidebar
 						user={{ name: host?.name }}
 						{eventType}
