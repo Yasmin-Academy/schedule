@@ -33,7 +33,7 @@
 	}: Props = $props();
 </script>
 
-<div class="w-52 ml-6 border-l border-gray-200 pl-6 flex flex-col" style="max-height: 400px;">
+<div class="w-52 ml-6 border-l border pl-6 flex flex-col" style="max-height: 400px;">
 	<h3 class="text-sm font-medium text-gray-500 mb-4 flex-shrink-0">
 		{formatSelectedDate(selectedDate).split(',')[0]}
 	</h3>
@@ -68,7 +68,7 @@
 						type="button"
 						onclick={() => onSelectSlot(slot)}
 						class="w-full py-2.5 px-3 border-2 rounded-lg text-sm font-semibold transition"
-						style="border-color: {brandColor}; color: {brandColor}"
+						style="border-color: var(--foreground-accent, {brandColor}); color: var(--foreground-accent, {brandColor})"
 					>
 						{formatTime(slot.start)}
 					</button>

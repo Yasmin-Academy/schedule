@@ -76,7 +76,7 @@
 	// (kept as props so the embed can localize)
 </script>
 
-<div class="w-72 border-r border-gray-200 flex flex-col flex-shrink-0">
+<div class="border w-72 border-r flex flex-col flex-shrink-0">
 	{#if eventType?.cover_image}
 		<div class="p-6 pb-4 flex justify-center">
 			<img src={eventType.cover_image} alt="" class="max-h-16 w-auto object-contain" />
@@ -89,14 +89,14 @@
 			{#if user?.profileImage}
 				<img src={user.profileImage} alt={user.name} class="w-12 h-12 rounded-full object-cover mb-3" />
 			{:else}
-				<div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg mb-3" style="background-color: {brandColor}">
+				<div class="w-12 h-12 rounded-full flex items-center justify-center text-primary font-semibold text-lg mb-3" style="background-color: {brandColor}">
 					{user?.name?.charAt(0) || 'M'}
 				</div>
 			{/if}
 			<p class="text-sm font-medium text-gray-600 mb-1">
 				{lang === 'ar' && eventType?.host_name_ar ? eventType.host_name_ar : (user?.name || t('hostLabel', 'Host'))}
 			</p>
-			<h1 class="text-2xl font-bold text-gray-900">
+			<h1 class="text-2xl font-bold text-primary">
 				{lang === 'ar' && eventType?.name_ar ? eventType.name_ar : (eventType?.name || t('meetingLabel', 'Meeting'))}
 			</h1>
 		</div>

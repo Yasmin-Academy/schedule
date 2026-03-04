@@ -128,7 +128,7 @@
 					{day.isAvailable && !hasSlots && day.isCurrentMonth ? 'text-gray-400' : ''}
 					{!day.isAvailable && day.isCurrentMonth ? 'text-gray-300 cursor-not-allowed' : ''}
 					{isSelected ? 'text-white' : ''}"
-				style="{isClickable && !isSelected ? `background-color: ${brandLighter}; color: ${brandDark}` : ''}{isSelected ? `background-color: var(--foreground-accent, ${brandColor})` : ''}"
+				style="{isClickable && !isSelected ? `background-color: var(--background-accent, ${brandLighter}); color: var(--foreground-secondary, ${brandDark})` : ''}{isSelected ? `background-color: var(--foreground-accent, ${brandColor})` : ''}"
 			>
 				{nf().format(day.date.getDate())}
 			</button>

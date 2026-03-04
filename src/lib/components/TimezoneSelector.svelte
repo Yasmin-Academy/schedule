@@ -93,7 +93,7 @@
 ></button>
 
 <!-- Modal - Always centered on screen -->
-<div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-[80vh] flex flex-col overflow-hidden">
+<div class="timezone-selector fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-2rem)] max-w-md border border-gray-200 rounded-xl shadow-2xl z-50 max-h-[80vh] flex flex-col overflow-hidden">
 	<!-- Search -->
 	<div class="p-3 border-b border-gray-100">
 		<div class="relative">
