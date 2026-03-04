@@ -35,7 +35,10 @@
 
 <div class="w-52 ml-6 border-l foreground-border pl-6 flex flex-col" style="max-height: 400px;">
 	<h3 class="text-sm font-medium text-primary mb-4 flex-shrink-0">
-		{formatSelectedDate(selectedDate).split(',')[0]}
+		{tr.selectedDate ?? (lang === 'ar' ?
+		new Intl.DateTimeFormat('ar-SA', { weekday: 'long' }).format(new Date(selectedDate)) :
+		formatSelectedDate(selectedDate).split(',')
+	)}
 	</h3>
 
 	{#if loading}
