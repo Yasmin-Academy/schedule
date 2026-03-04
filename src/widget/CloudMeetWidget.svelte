@@ -300,7 +300,7 @@
 	{:else if errorMsg}
 		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
 	{:else}
-			<div class="min-h-[520px] widget rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+			<div class="min-h-[520px] widget rounded-xl shadow-sm border overflow-hidden">
 			<div class="flex flex-col md:flex-row">
 					<EventSidebar
 						user={{ name: host?.name }}
@@ -319,7 +319,7 @@
 						meetingNote={tr.roomNote}
 					/>
 
-				<div class="flex-1 p-6">
+<div class="flex-1 p-6">				<div class="flex items-stretch"></div>
 					<div class="flex items-center justify-between mb-4">
 					<h2 class="text-lg font-semibold text-gray-900">{tr.selectDateTime}</h2>
 					</div>

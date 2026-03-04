@@ -49,5 +49,6 @@
 	/*Site Widget Only*/
 	.widget {
 		background-color: var(--background-card);
+		border: var(--border-size-1) solid var(--foreground-border);
 	}
 }
