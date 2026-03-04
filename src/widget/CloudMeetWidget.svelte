@@ -314,12 +314,12 @@
 
 <div class="schedule-widget-root w-full" dir={dir} lang={l}>
 	{#if loadingCore}
-		<div class="p-6 text-sm text-gray-600">Loading…</div>
+		<div class="p-6 text-sm text-muted">Loading…</div>
 	{:else if errorMsg}
 		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
 	{:else}
 		<div
-			class="md:bg-gray-100 flex flex-col items-center md:justify-center md:p-4"
+			class="flex flex-col items-center md:justify-center"
 			style="--brand-color: var(--foreground-accent);"
 		>
 			{#if bookingStatus === 'success' && selectedDate && selectedSlot}
@@ -376,17 +376,17 @@
 
 									<!-- Timezone selector (matches booking page placement) -->
 									<div class="mt-6 relative">
-										<p class="text-sm font-semibold text-gray-900 mb-2">
-											{l === 'ar' ? 'المنطقة الزمنية' : 'Time zone'}
+										<p class="text-sm font-semibold text-primary mb-2">
+											{l === 'ar' ? 'المنطقة الزمنية' : 'Timezone'}
 										</p>
 
 										<button
 											bind:this={tzButtonEl}
 											type="button"
 											onclick={() => (showTimezoneDropdown = !showTimezoneDropdown)}
-											class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition"
+											class="flex items-center gap-2 text-sm text-muted hover:text-primary transition"
 										>
-											<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path
 													stroke-linecap="round"
 													stroke-linejoin="round"
@@ -397,7 +397,7 @@
 
 											<span>{tzNowLabel} · {tzNowTime}</span>
 
-											<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 											</svg>
 										</button>
