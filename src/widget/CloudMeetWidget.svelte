@@ -314,7 +314,9 @@
 
 <div class="schedule-widget-root w-full" dir={dir} lang={l}>
 	{#if loadingCore}
-		<div class="p-6 text-sm text-muted">Loading…</div>
+		<div class="flex justify-center items-center">
+		    <div class="p-6 text-sm text-muted">Loading…</div>
+		</div>
 	{:else if errorMsg}
 		<div class="p-6 text-sm text-red-600">{errorMsg}</div>
 	{:else}
