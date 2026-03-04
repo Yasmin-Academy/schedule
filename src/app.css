@@ -3,79 +3,114 @@
 @tailwind utilities;
 
 @layer base {
-	:root {
-		--color-primary: theme('colors.blue.600');
-		--color-primary-hover: theme('colors.blue.700');
-	}
+    :root {
+        --color-primary: theme("colors.blue.600");
+        --color-primary-hover: theme("colors.blue.700");
+    }
 }
 
 @layer utilities {
-	[dir="rtl"] .rtl-flip {
-		transform: scaleX(-1);
-	}
-
-	.animate-fade-in {
-		animation: fadeIn 0.3s ease-in-out;
-	}
-
-	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
-	}
-
-	/* Custom scrollbar styling */
-	.scrollbar-thin {
-		scrollbar-width: thin;
-		scrollbar-color: #d1d5db transparent;
-	}
-
-	.scrollbar-thin::-webkit-scrollbar {
-		width: 6px;
-	}
-
-	.scrollbar-thin::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	.scrollbar-thin::-webkit-scrollbar-thumb {
-		background-color: #d1d5db;
-		border-radius: 3px;
-	}
-
-	.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-		background-color: #9ca3af;
-	}
-		
-	/*Widget*/
-	[type=text], input:where(:not([type])), [type=email], [type=url], [type=password], [type=number], [type=date], [type=datetime-local], [type=month], [type=search], [type=tel], [type=time], [type=week], [multiple], textarea, select {
-    	background-color: transparent;
+    [dir="rtl"] .rtl-flip {
+        transform: scaleX(-1);
     }
-	.widget {
-		background-color: var(--background-card, rgb(234 237 242 / 0.8));
-		border: var(--border-size-1) solid var(--foreground-border, rgb(228 228 225));
-	}
-	.foreground-border {
-		border-color: var(--foreground-border, rgb(228 228 225));
-	}
-	.text-primary {
-		color: var(--foreground-primary, rgb(37 53 81));
-	}
-	.text-muted {
-		color: var(--foreground-muted, rgb(66 91 136));
-	}
-	.background-secondary {
-		background-color: var(--background-secondary, rgb(223 230 241));
-	}
-	.timezone-selector {
-		background-color: var(--background-card, rgb(234 237 242 / 0.8));
-		backdrop-filter: blur(5px);
-		-webkit-backdrop-filter: blur(5px);
-	}
-	.dialog-overlay {
-		background-color: rgb(0 0 0 / 0.85);
-		cursor: default;
-	}
-	.schedule-widget-root .host-name, .schedule-widget-root .host-avatar {
-		display: none;
-	}
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Custom scrollbar styling */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: #d1d5db transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 3px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background-color: #9ca3af;
+    }
+
+    /*Widget*/
+    [type="text"],
+    input:where(:not([type])),
+    [type="email"],
+    [type="url"],
+    [type="password"],
+    [type="number"],
+    [type="date"],
+    [type="datetime-local"],
+    [type="month"],
+    [type="search"],
+    [type="tel"],
+    [type="time"],
+    [type="week"],
+    [multiple],
+    textarea,
+    select {
+        background-color: transparent;
+    }
+    .widget {
+        background-color: var(--background-card, rgb(234 237 242 / 0.8));
+        border: var(--border-size-1) solid
+            var(--foreground-border, rgb(228 228 225));
+    }
+    .foreground-border {
+        border-color: var(--foreground-border, rgb(228 228 225));
+    }
+    .text-primary {
+        color: var(--foreground-primary, rgb(37 53 81));
+    }
+    .text-muted {
+        color: var(--foreground-muted, rgb(66 91 136));
+    }
+    .font-system-ui {
+        font-family:
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            Oxygen,
+            Ubuntu,
+            Cantarell,
+            "Open Sans",
+            "Helvetica Neue",
+            sans-serif;
+    }
+    .background-secondary {
+        background-color: var(--background-secondary, rgb(223 230 241));
+    }
+    .timezone-selector {
+        background-color: var(--background-card, rgb(234 237 242 / 0.8));
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    .dialog-overlay {
+        background-color: rgb(0 0 0 / 0.85);
+        cursor: default;
+    }
+    .schedule-widget-root .host-name,
+    .schedule-widget-root .host-avatar {
+        display: none;
+    }
 }
