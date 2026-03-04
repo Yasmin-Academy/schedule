@@ -6,8 +6,19 @@
 	import { detectTimezone, getCurrentTime } from '$lib/constants/timezones';
 	import { formatDateLocal, formatSelectedDate } from '$lib/utils/dateFormatters';
 	import { BookingCalendar } from '$lib/components/booking';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
+
+	// Language/locale (read from ?lang=ar)
+	const urlLang = page.url.searchParams.get('lang') || 'en';
+	const lang: 'en' | 'ar' = urlLang.startsWith('ar') ? 'ar' : 'en';
+	const locale = lang === 'ar' ? 'ar-EG-u-nu-arab' : 'en-US';
+
+	function weekdayLabel(dateStr: string) {
+		const d = new Date(dateStr);
+		return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(d);
+	}
 
 	// Brand colors
 	const brandColor = data.booking.brandColor;
@@ -37,7 +48,7 @@
 
 	function formatTime(isoStr: string) {
 		const date = new Date(isoStr);
-		return new Intl.DateTimeFormat('en-US', {
+		return new Intl.DateTimeFormat(locale, {
 			hour: 'numeric',
 			minute: '2-digit',
 			hour12: use12Hour,
@@ -51,7 +62,7 @@
 
 	function formatOriginalDateTime(dateStr: string) {
 		const date = new Date(dateStr);
-		return new Intl.DateTimeFormat('en-US', {
+		return new Intl.DateTimeFormat(locale, {
 			weekday: 'short',
 			month: 'short',
 			day: 'numeric',
@@ -78,300 +89,244 @@
 		try {
 			const year = currentMonth.getFullYear();
 			const month = currentMonth.getMonth() + 1;
-			const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+			const monthStr = month.toString().padStart(2, '0');
 
-			const response = await fetch(`/api/availability/month?event=${data.booking.eventSlug}&month=${monthStr}`);
-			if (!response.ok) throw new Error('Failed to fetch availability');
+			const res = await fetch(
+				`/api/public/reschedule/${data.booking.id}/availability?year=${year}&month=${monthStr}&tz=${encodeURIComponent(
+					selectedTimezone
+				)}`
+			);
 
-			const result = await response.json() as { availableDates?: string[] };
-			availableDates = new Set(result.availableDates || []);
-		} catch (error) {
-			console.error('Error fetching month availability:', error);
+			if (!res.ok) throw new Error('Failed to fetch availability');
+
+			const { availableDates: dates } = await res.json();
+			availableDates = new Set(dates || []);
+		} catch (e: any) {
+			console.error('Error fetching availability:', e);
 			availableDates = new Set();
 		} finally {
 			loadingAvailability = false;
 		}
 	}
 
-	$effect(() => {
-		fetchMonthAvailability();
-	});
-
-	async function handleDateSelect(dateStr: string) {
-		selectedDate = dateStr;
-		selectedSlot = null;
+	async function fetchSlots(dateStr: string) {
 		loading = true;
 
 		try {
-			const response = await fetch(`/api/availability?event=${data.booking.eventSlug}&date=${dateStr}`);
-			if (!response.ok) throw new Error('Failed to fetch availability');
-			const result = await response.json() as { slots?: Array<{ start: string; end: string }> };
-			availableSlots = result.slots || [];
-		} catch (error) {
-			console.error('Error fetching availability:', error);
+			const res = await fetch(
+				`/api/public/reschedule/${data.booking.id}/slots?date=${dateStr}&tz=${encodeURIComponent(
+					selectedTimezone
+				)}`
+			);
+
+			if (!res.ok) throw new Error('Failed to fetch slots');
+
+			const { slots } = await res.json();
+			availableSlots = slots || [];
+		} catch (e: any) {
+			console.error('Error fetching slots:', e);
 			availableSlots = [];
 		} finally {
 			loading = false;
 		}
 	}
 
+	function selectDate(dateStr: string) {
+		selectedDate = dateStr;
+		selectedSlot = null;
+		fetchSlots(dateStr);
+	}
+
 	function selectSlot(slot: { start: string; end: string }) {
 		selectedSlot = slot;
 	}
 
-	async function handleReschedule() {
-		if (!selectedSlot) return;
+	async function submitReschedule() {
+		if (!selectedDate || !selectedSlot) return;
 
 		rescheduleStatus = 'submitting';
 		rescheduleError = '';
 
 		try {
-			const response = await fetch('/api/bookings/reschedule', {
+			const res = await fetch(`/api/public/reschedule/${data.booking.id}`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					bookingId: data.booking.id,
-					newStartTime: selectedSlot.start,
-					newEndTime: selectedSlot.end,
-					timezone: selectedTimezone
+					date: selectedDate,
+					start: selectedSlot.start,
+					end: selectedSlot.end,
+					timeZone: selectedTimezone
 				})
 			});
 
-			if (!response.ok) {
-				const errData = await response.json() as { message?: string };
-				throw new Error(errData.message || 'Failed to reschedule booking');
+			if (!res.ok) {
+				const err = await res.json().catch(() => ({}));
+				throw new Error(err?.message || 'Reschedule failed');
 			}
 
-			const result = await response.json() as { meetingUrl?: string };
-			newMeetingUrl = result.meetingUrl || null;
+			const result = await res.json();
+			newMeetingUrl = result?.meetingUrl || null;
 			rescheduleStatus = 'success';
-		} catch (error: any) {
-			console.error('Reschedule error:', error);
-			rescheduleError = error.message || 'Failed to reschedule booking';
+		} catch (e: any) {
+			rescheduleError = e?.message || 'Reschedule failed';
 			rescheduleStatus = 'error';
 		}
 	}
+
+	function toggleTimezoneDropdown() {
+		showTimezoneDropdown = !showTimezoneDropdown;
+	}
+
+	function closeTimezoneDropdown(e: MouseEvent) {
+		const target = e.target as Node | null;
+		const dropdown = document.getElementById('tz-dropdown');
+		const button = document.getElementById('tz-button');
+
+		if (showTimezoneDropdown) {
+			if (dropdown && dropdown.contains(target)) return;
+			if (button && button.contains(target)) return;
+			showTimezoneDropdown = false;
+		}
+	}
+
+	// Initialize
+	$effect(() => {
+		fetchMonthAvailability();
+	});
+
+	$effect(() => {
+		if (selectedDate) fetchSlots(selectedDate);
+	});
+
+	$effect(() => {
+		document.addEventListener('click', closeTimezoneDropdown);
+		return () => document.removeEventListener('click', closeTimezoneDropdown);
+	});
 </script>
 
 <svelte:head>
-	<title>Reschedule Meeting</title>
+	<title>Reschedule</title>
 </svelte:head>
 
-<div
-	class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4"
-	style="--brand-color: {brandColor}; --brand-light: {colors.light}; --brand-lighter: {colors.lighter}; --brand-dark: {colors.dark}; --brand-rgb: {colors.rgb.r}, {colors.rgb.g}, {colors.rgb.b};"
->
-	{#if rescheduleStatus === 'success'}
-		<!-- Success Screen -->
-		<div class="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full">
-			<div class="text-center">
-				<div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-					<svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-					</svg>
-				</div>
-				<h1 class="text-2xl font-semibold text-gray-900 mb-2">Meeting Rescheduled!</h1>
-				<p class="text-gray-600 mb-8">Your meeting has been rescheduled. A calendar update has been sent to your email.</p>
+<div class="min-h-screen flex flex-col">
+	<main class="flex-1">
+		<div class="max-w-5xl mx-auto px-4 py-8">
+			<div class="flex items-center justify-between mb-8">
+				<h1 class="text-3xl font-bold text-primary">Reschedule</h1>
 
-				<div class="bg-gray-50 rounded-lg p-6 text-left mb-6">
-					<h3 class="font-semibold text-gray-900 mb-4">{data.booking.eventName}</h3>
-					<div class="space-y-3 text-sm">
-						<div class="flex items-start gap-3">
-							<svg class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-							</svg>
-							<div>
-								<p class="text-gray-900 font-medium">New Time</p>
-								<p class="text-gray-700">{selectedSlot ? formatTimeRange(selectedSlot.start, selectedSlot.end) : ''}</p>
-								<p class="text-gray-500">{selectedDate ? formatSelectedDate(selectedDate) : ''}</p>
-							</div>
-						</div>
-						{#if newMeetingUrl}
-							<div class="flex items-start gap-3">
-								<svg class="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-								</svg>
-								<a href={newMeetingUrl} target="_blank" class="hover:underline break-all" style="color: var(--brand-color)">{data.booking.inviteCalendar === 'outlook' ? 'Join Microsoft Teams Meeting' : 'Join Google Meet'}</a>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
-		</div>
-		<Footer class="mt-6" />
-	{:else}
-		<!-- Reschedule Form - matching main booking page layout -->
-		<div class="bg-white rounded-2xl shadow-lg overflow-hidden flex transition-all duration-300 ease-in-out" style="width: {selectedDate ? '920px' : '650px'}">
-			<!-- Left Sidebar -->
-			<div class="w-72 border-r border-gray-200 flex flex-col flex-shrink-0">
-				{#if data.booking.coverImage}
-					<div class="p-6 pb-4 flex justify-center">
-						<img src={data.booking.coverImage} alt="" class="max-h-16 w-auto object-contain" />
-					</div>
-					<div class="border-b border-gray-200 mx-6"></div>
-				{/if}
-
-				<div class="flex-1 p-6">
-					<div class="mb-6">
-						{#if data.booking.profileImage}
-							<img src={data.booking.profileImage} alt={data.booking.hostName} class="w-12 h-12 rounded-full object-cover mb-3" />
-						{:else}
-							<div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg mb-3" style="background-color: var(--brand-color)">
-								{data.booking.hostName?.charAt(0) || 'H'}
-							</div>
-						{/if}
-						<p class="text-sm font-medium text-gray-600 mb-1">{data.booking.hostName}</p>
-						<h1 class="text-2xl font-bold text-gray-900">{data.booking.eventName}</h1>
-					</div>
-
-					<div class="space-y-4 text-sm text-gray-600">
-						<div class="flex items-center gap-3">
-							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-							</svg>
-							<span>{data.booking.duration} min</span>
-						</div>
-						<div class="flex items-center gap-3">
-							<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-							</svg>
-							<span>{data.booking.inviteCalendar === 'outlook' ? 'Microsoft Teams' : 'Google Meet'}</span>
-						</div>
-					</div>
-
-					<!-- Current booking info -->
-					<div class="mt-6 pt-6 border-t border-gray-200">
-						<p class="text-xs font-semibold text-gray-500 uppercase mb-2">Current booking</p>
-						<div class="bg-red-50 rounded-lg p-3 text-sm">
-							<p class="font-medium text-red-900">{formatOriginalDateTime(data.booking.startTime)}</p>
-							<p class="text-red-700">{data.booking.attendeeName}</p>
-							<p class="text-red-600 text-xs">{data.booking.attendeeEmail}</p>
-						</div>
-					</div>
-
-					{#if selectedSlot}
-						<div class="mt-4">
-							<p class="text-xs font-semibold text-gray-500 uppercase mb-2">New time</p>
-							<div class="bg-green-50 rounded-lg p-3 text-sm">
-								<p class="font-medium text-green-900">{formatTime(selectedSlot.start)} - {formatTime(selectedSlot.end)}</p>
-								<p class="text-green-700">{selectedDate ? formatSelectedDate(selectedDate) : ''}</p>
-							</div>
-						</div>
-					{/if}
-				</div>
-			</div>
-
-			<!-- Main Content -->
-			<div class="flex-1 p-6">
-				{#if rescheduleError}
-					<div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6 max-w-2xl">
-						{rescheduleError}
-					</div>
-				{/if}
-
-				<div class="flex items-stretch">
-					<div class="w-80">
-						<h2 class="text-xl font-semibold text-gray-900 mb-6">Select a New Date & Time</h2>
-
-						<BookingCalendar
-							{currentMonth}
-							{selectedDate}
-							{availableDates}
-							{brandColor}
-							brandLighter={colors.lighter}
-							brandDark={colors.dark}
-							onDateSelect={handleDateSelect}
-							onPrevMonth={prevMonth}
-							onNextMonth={nextMonth}
-						/>
-
-						<!-- Timezone selector -->
-						<div class="mt-6 relative">
-							<p class="text-sm font-semibold text-gray-900 mb-2">Time zone</p>
-							<button
-								type="button"
-								onclick={() => showTimezoneDropdown = !showTimezoneDropdown}
-								class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition"
-							>
-								<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-								</svg>
-								<span>{selectedTimezone} ({getCurrentTime(selectedTimezone, use12Hour)})</span>
-								<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-								</svg>
-							</button>
-							{#if showTimezoneDropdown}
-								<TimezoneSelector
-									{selectedTimezone}
-									onSelect={(tz) => selectedTimezone = tz}
-									onClose={() => showTimezoneDropdown = false}
-									{brandColor}
-								/>
-							{/if}
-						</div>
-					</div>
-
-					{#if selectedDate}
-						<div class="w-52 ml-6 border-l border-gray-200 pl-6 flex flex-col" style="max-height: 400px;">
-							<h3 class="text-sm font-medium text-gray-500 mb-4 flex-shrink-0">
-								{formatSelectedDate(selectedDate).split(',')[0]}
-							</h3>
-							{#if loading}
-								<div class="flex items-center justify-center py-8">
-									<div class="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent" style="border-color: var(--brand-color); border-top-color: transparent"></div>
-								</div>
-							{:else if availableSlots.length === 0}
-								<p class="text-sm text-gray-500 py-4">No available times</p>
-							{:else}
-								<div class="space-y-2 overflow-y-auto flex-1 pr-2 pb-2 scrollbar-thin">
-									{#each availableSlots as slot}
-										{#if selectedSlot === slot}
-											<button type="button" class="w-full py-2.5 px-3 border-2 border-gray-900 bg-gray-900 text-white rounded-lg text-sm font-semibold">
-												{formatTime(slot.start)}
-											</button>
-										{:else}
-											<button
-												type="button"
-												onclick={() => selectSlot(slot)}
-												class="w-full py-2.5 px-3 border-2 rounded-lg text-sm font-semibold transition"
-												style="border-color: var(--brand-color); color: var(--brand-color)"
-											>
-												{formatTime(slot.start)}
-											</button>
-										{/if}
-									{/each}
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</div>
-
-				<!-- Reschedule button -->
-				{#if selectedSlot}
-					<div class="mt-6 pt-6 border-t border-gray-200">
-						<button
-							onclick={handleReschedule}
-							disabled={rescheduleStatus === 'submitting'}
-							class="w-full py-3 px-6 text-white rounded-full font-semibold transition disabled:opacity-50"
-							style="background-color: var(--brand-color)"
-						>
-							{rescheduleStatus === 'submitting' ? 'Rescheduling...' : 'Confirm Reschedule'}
-						</button>
-					</div>
-				{/if}
-
-				<!-- Cancel link -->
-				<div class="mt-4 text-center">
-					<a
-						href="/cancel/{data.booking.id}"
-						class="text-sm text-gray-500 hover:text-red-600 transition"
+				<div class="relative">
+					<button
+						id="tz-button"
+						type="button"
+						class="flex items-center gap-2 px-3 py-2 border foreground-border rounded-lg text-sm font-semibold"
+						onclick={toggleTimezoneDropdown}
 					>
-						Or cancel this meeting instead
-					</a>
+						<span class="text-primary">Time zone</span>
+						<span class="text-gray-500">{getCurrentTime(selectedTimezone)}</span>
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+							<path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+					</button>
+
+					{#if showTimezoneDropdown}
+						<div id="tz-dropdown" class="absolute right-0 mt-2 z-50">
+							<TimezoneSelector bind:selectedTimezone />
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<div class="bg-white rounded-2xl shadow p-8">
+				<div class="flex gap-8">
+					<div class="w-80 flex flex-col gap-4">
+						<div class="border rounded-xl p-4">
+							<h2 class="text-lg font-semibold text-primary mb-2">Original</h2>
+							<p class="text-sm text-gray-700">
+								{formatOriginalDateTime(data.booking.start)}
+							</p>
+						</div>
+
+						{#if rescheduleStatus === 'success'}
+							<div class="border rounded-xl p-4 border-green-200 bg-green-50">
+								<h2 class="text-lg font-semibold text-green-800 mb-2">Success</h2>
+								<p class="text-sm text-green-700">
+									Booked {selectedDate ? formatSelectedDate(selectedDate) : ''} {selectedSlot ? formatTimeRange(selectedSlot.start, selectedSlot.end) : ''}
+								</p>
+								{#if newMeetingUrl}
+									<p class="text-sm text-green-700 mt-2">
+										<a class="underline" href={newMeetingUrl} target="_blank" rel="noreferrer">Meeting link</a>
+									</p>
+								{/if}
+							</div>
+						{:else if rescheduleStatus === 'error'}
+							<div class="border rounded-xl p-4 border-red-200 bg-red-50">
+								<h2 class="text-lg font-semibold text-red-800 mb-2">Error</h2>
+								<p class="text-sm text-red-700">{rescheduleError}</p>
+							</div>
+						{/if}
+					</div>
+
+					<div class="flex-1 flex gap-8">
+						<div class="flex flex-col">
+							<BookingCalendar
+								{currentMonth}
+								{brandColor}
+								availableDates={availableDates}
+								loadingAvailability={loadingAvailability}
+								onSelectDate={selectDate}
+								onPrevMonth={prevMonth}
+								onNextMonth={nextMonth}
+							/>
+						</div>
+
+						{#if selectedDate}
+							<div class="w-52 ml-6 border-l foreground-border pl-6 flex flex-col" style="max-height: 400px;">
+								<h3 class="text-sm font-medium text-gray-500 mb-4 flex-shrink-0">
+									{weekdayLabel(selectedDate)}
+								</h3>
+								{#if loading}
+									<div class="flex items-center justify-center py-8">
+										<div class="animate-spin rounded-full h-8 w-8 border-2 border-t-transparent" style="border-color: {brandColor}; border-top-color: transparent"></div>
+									</div>
+								{:else if availableSlots.length === 0}
+									<p class="text-sm text-gray-500 py-4">No available times</p>
+								{:else}
+									<div class="space-y-2 overflow-y-auto flex-1 pr-2 pb-2 scrollbar-thin">
+										{#each availableSlots as slot}
+											{#if selectedSlot === slot}
+												<div class="flex gap-2">
+													<button type="button" class="flex-1 py-2.5 px-3 border-2 foreground-border background-accent text-primary rounded-lg text-sm font-semibold">
+														{formatTime(slot.start)}
+													</button>
+													<button
+														type="button"
+														onclick={submitReschedule}
+														class="flex-1 py-2.5 px-3 text-white rounded-lg text-sm font-semibold transition"
+														style="background-color: var(--foreground-accent, {brandColor})"
+													>
+														Confirm
+													</button>
+												</div>
+											{:else}
+												<button
+													type="button"
+													onclick={() => selectSlot(slot)}
+													class="w-full py-2.5 px-3 border-2 rounded-lg text-sm font-semibold transition"
+													style="border-color: var(--foreground-accent, {brandColor}); color: var(--foreground-accent, {brandColor})"
+												>
+													{formatTime(slot.start)}
+												</button>
+											{/if}
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
-		<Footer class="mt-6" />
-	{/if}
+	</main>
+
+	<Footer />
 </div>
