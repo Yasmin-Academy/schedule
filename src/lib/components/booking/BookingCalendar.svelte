@@ -92,7 +92,7 @@
 
 <div>
 	<div class="flex items-center justify-between mb-4">
-		<h3 class="text-lg font-medium text-gray-900">{formatMonthYear(currentMonth)}</h3>
+		<h3 class="text-lg font-medium text-primary">{formatMonthYear(currentMonth)}</h3>
 		<div class="flex gap-2">
 			<button onclick={onPrevMonth} class="p-2 hover:bg-gray-100 rounded-full transition" aria-label={prevMonthLabel()}>
 				<svg class="w-5 h-5 text-gray-600 rtl-flip" fill="none" stroke="currentColor" viewBox="0 0 24 24">
