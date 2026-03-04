@@ -335,14 +335,14 @@
 			{:else}
 				<div class="w-full md:flex widget rounded-2xl overflow-hidden" style="max-width: 920px;">
 					<EventSidebar
-						user={data.user}
-						eventType={data.eventType}
+						user={{ name: host?.name }}
+						{eventType}
 						{selectedDate}
 						{selectedSlot}
-						    lang={lang}
 						{brandColor}
 						{formatTime}
-							tr={tr}
+						meetingLabel={tr.onlineRoom}
+						meetingNote={tr.roomNote}
 					/>
 
 					<div class="flex-1 p-6">
