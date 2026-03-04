@@ -156,7 +156,6 @@
 			if (!baseUrl) throw new Error('Missing base-url');
 
 			const res = await fetch(api(`/api/public/event-type/${encodeURIComponent(event)}`));
-
 			if (!res.ok) throw new Error('Failed to load event');
 
 			const data = await res.json();
@@ -188,25 +187,20 @@
 		try {
 			const year = currentMonth.getFullYear();
 			const monthNum = currentMonth.getMonth() + 1;
-
 			const monthStr = `${year}-${String(monthNum).padStart(2, '0')}`;
 
 			const res = await fetch(
 				api(`/api/availability/month?event=${encodeURIComponent(event)}&month=${monthStr}`)
 			);
-
 			if (!res.ok) throw new Error();
 
 			const result = await res.json();
-
 			availableDates = new Set(result.availableDates || []);
 
 			if (!selectedDate && availableDates.size > 0) {
 				const today = ymdInTz(new Date(), selectedTimezone);
 				const sorted = Array.from(availableDates).sort();
-
 				const first = sorted.find((d) => d >= today) || sorted[0];
-
 				await handleDateSelect(first);
 			}
 		} finally {
@@ -235,11 +229,9 @@
 			const res = await fetch(
 				api(`/api/availability?event=${encodeURIComponent(event)}&date=${dateStr}`)
 			);
-
 			if (!res.ok) throw new Error();
 
 			const result = await res.json();
-
 			availableSlots = result.slots || [];
 		} finally {
 			loadingSlots = false;
@@ -248,13 +240,10 @@
 
 	async function handleTimezoneSelect(tz: string) {
 		selectedTimezone = tz;
-
 		updateTzNow();
-
 		showTimezoneDropdown = false;
 
 		await fetchMonthAvailability();
-
 		if (selectedDate) await handleDateSelect(selectedDate);
 	}
 
@@ -268,7 +257,6 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-
 		if (!selectedSlot) return;
 
 		bookingStatus = 'submitting';
@@ -306,13 +294,11 @@
 
 		document.addEventListener('mousedown', closeTimezoneIfOutside, true);
 		document.addEventListener('touchstart', closeTimezoneIfOutside, true);
-
 		window.addEventListener('keydown', closeTimezoneOnEsc);
 
 		await fetchCore();
 
 		updateTzNow();
-
 		const tick = setInterval(updateTzNow, 60000);
 
 		await fetchMonthAvailability();
@@ -339,25 +325,22 @@
 			{#if bookingStatus === 'success' && selectedDate && selectedSlot}
 				<BookingSuccess
 					eventName={eventType?.name}
-					selectedDate={selectedDate}
-					selectedSlot={selectedSlot}
-					meetingUrl={meetingUrl}
-					brandColor={brandColor}
-					formatTimeRange={formatTimeRange}
-					formatSelectedDate={formatSelectedDate}
+					{selectedDate}
+					{selectedSlot}
+					{meetingUrl}
+					{brandColor}
+					{formatTimeRange}
+					{formatSelectedDate}
 				/>
 			{:else}
-				<div
-					class="w-full md:flex bg-white rounded-2xl shadow-lg overflow-hidden"
-					style="max-width: 920px;"
-				>
+				<div class="w-full md:flex bg-white rounded-2xl shadow-lg overflow-hidden" style="max-width: 920px;">
 					<EventSidebar
 						user={{ name: host?.name }}
-						eventType={eventType}
-						selectedDate={selectedDate}
-						selectedSlot={selectedSlot}
-						brandColor={brandColor}
-						formatTime={formatTime}
+						{eventType}
+						{selectedDate}
+						{selectedSlot}
+						{brandColor}
+						{formatTime}
 						meetingLabel={tr.onlineRoom}
 						meetingNote={tr.roomNote}
 					/>
@@ -365,10 +348,10 @@
 					<div class="flex-1 p-6">
 						{#if showForm}
 							<BookingForm
-								bookingForm={bookingForm}
-								bookingStatus={bookingStatus}
-								bookingError={bookingError}
-								brandColor={brandColor}
+								{bookingForm}
+								{bookingStatus}
+								{bookingError}
+								{brandColor}
 								onSubmit={handleSubmit}
 							/>
 						{:else}
@@ -379,25 +362,68 @@
 									</h2>
 
 									<BookingCalendar
-										currentMonth={currentMonth}
-										selectedDate={selectedDate}
-										availableDates={availableDates}
-										brandColor={brandColor}
+										{currentMonth}
+										{selectedDate}
+										{availableDates}
+										{brandColor}
+										brandLighter={colors.lighter}
+										brandDark={colors.dark}
 										lang={l}
 										onDateSelect={handleDateSelect}
 										onPrevMonth={prevMonth}
 										onNextMonth={nextMonth}
 									/>
+
+									<!-- Timezone selector (matches booking page placement) -->
+									<div class="mt-6 relative">
+										<p class="text-sm font-semibold text-gray-900 mb-2">
+											{l === 'ar' ? 'المنطقة الزمنية' : 'Time zone'}
+										</p>
+
+										<button
+											bind:this={tzButtonEl}
+											type="button"
+											onclick={() => (showTimezoneDropdown = !showTimezoneDropdown)}
+											class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition"
+										>
+											<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+												/>
+											</svg>
+
+											<span>{tzNowLabel} · {tzNowTime}</span>
+
+											<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+											</svg>
+										</button>
+
+										{#if showTimezoneDropdown}
+											<div bind:this={tzDropdownEl}>
+												<TimezoneSelector
+													{selectedTimezone}
+													lang={l}
+													{brandColor}
+													onSelect={(tz) => handleTimezoneSelect(tz)}
+													onClose={() => (showTimezoneDropdown = false)}
+												/>
+											</div>
+										{/if}
+									</div>
 								</div>
 
 								{#if selectedDate}
 									<TimeSlotList
-										selectedDate={selectedDate}
+										{selectedDate}
 										availableSlots={availableSlots}
-										selectedSlot={selectedSlot}
+										{selectedSlot}
 										loading={loadingSlots}
-										brandColor={brandColor}
-										formatTime={formatTime}
+										{brandColor}
+										{formatTime}
 										onSelectSlot={selectSlot}
 										onConfirm={confirmSlot}
 									/>
