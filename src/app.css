@@ -51,24 +51,6 @@
     }
 
     /*Widget*/
-    [type="text"],
-    input:where(:not([type])),
-    [type="email"],
-    [type="url"],
-    [type="password"],
-    [type="number"],
-    [type="date"],
-    [type="datetime-local"],
-    [type="month"],
-    [type="search"],
-    [type="tel"],
-    [type="time"],
-    [type="week"],
-    [multiple],
-    textarea,
-    select {
-        background-color: transparent;
-    }
     .widget {
         background-color: var(--background-card, rgb(234 237 242 / 0.8));
         border: var(--border-size-1) solid
